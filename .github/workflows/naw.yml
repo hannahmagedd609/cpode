@@ -1,33 +1,46 @@
-name: Test Workflow
+name: CI/CD Pipeline
 
-on: push
+on:
+  push:
+    branches: [ master ]
 
 jobs:
-  test:
-    name: Test Setup
-    runs-on: windows-latest
-
+  build-and-test:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Set up Qt
-        uses: jurplel/install-qt-action@v2
+      - name: Install Qt
+        uses: riverrun/qt-action@v1
         with:
-          version: '6.7.1'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2019_64'
+          qt-version: '5.15.2'  # Update this with your desired Qt version
 
-      - name: Verify Qt Installation
+      - name: Build the project
         run: |
-          if not exist C:\Qt\6.7.1\msvc2019_64\bin\qmake.exe (
-            echo Qt installation not found!
-            exit 1
-          ) else (
-            echo Qt installation verified.
-          )
+          qmake -project TicTacToe.pro # Replace with your project file name
+          make
 
-      - name: Verify qmake version
-        run: qmake -v
+      - name: Run Tests (if applicable)
+        run: ./your_test_executable  # Replace with your test script name (if any)
+
+      - name: Deploy (Optional)
+        # Add your deployment steps here based on your chosen deployment method
+        # This example showcases a simple artifact upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: tic-tac-toe-built-app
+
+  # Optional job for deployment (uncomment and configure)
+  # deploy:
+  #   needs: build-and-test
+  #   runs-on: ubuntu-latest  # Or your target deployment environment
+  #   steps:
+  #     - uses: actions/download-artifact@v3
+  #       with:
+  #         name: tic-tac-toe-built-app
+  #
+  #     # Add your deployment steps here, leveraging the downloaded artifact
+  #     # This example showcases a basic copy
+  #     run: cp tic-tac-toe-built-app /deployment/path
+
 
